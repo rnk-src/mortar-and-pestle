@@ -25,6 +25,6 @@ jobs:
           restore-keys: platformio-${{ runner.os }}-
       - name: Install PlatformIO and clang-format
         run: |
-          uv tool install platformio
+          uv tool install platformio==6.2.0
           uv tool install clang-format==23.1.5
       - run: make check

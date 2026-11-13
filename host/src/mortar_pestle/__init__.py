@@ -1,3 +1,5 @@
 """Host software for the assistive teleoperated mortar and pestle."""
 
-__version__ = "0.1.0"
+from importlib.metadata import version
+
+__version__ = version("mortar-pestle")
