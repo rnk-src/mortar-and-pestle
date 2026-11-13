@@ -1,0 +1,9 @@
+{
+  "name": "core",
+  "version": "0.1.0",
+  "description": "Hardware-free Leader logic. Builds on the host and on the ESP32.",
+  "build": {
+    "includeDir": "include",
+    "srcDir": "src"
+  }
+}
