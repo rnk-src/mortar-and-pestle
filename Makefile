@@ -1,8 +1,8 @@
 # `make check` is the single quality gate. CI runs the same command.
 # No target uploads firmware or opens a serial port.
 
-HOST := uv run --directory host
-CPP_FILES := $(shell find firmware -name .pio -prune -o \( -name '*.h' -o -name '*.cpp' \) -print)
+HOST := uv run --locked --directory host
+CPP_FILES := $(shell find firmware -name .pio -prune -o \( -name '*.h' -o -name '*.hpp' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' \) -print)
 
 .PHONY: check format py-format-check py-lint py-types py-test cpp-format-check cpp-test cpp-build
 
@@ -22,6 +22,7 @@ py-test:
 	$(HOST) pytest -q
 
 cpp-format-check:
+	@test -n "$(CPP_FILES)" || { echo "cpp-format-check: no C++ files found"; exit 1; }
 	clang-format --dry-run --Werror $(CPP_FILES)
 
 cpp-test:
@@ -34,4 +35,5 @@ cpp-build:
 format:
 	$(HOST) ruff format .
 	$(HOST) ruff check --fix .
+	@test -n "$(CPP_FILES)" || { echo "format: no C++ files found"; exit 1; }
 	clang-format -i $(CPP_FILES)
