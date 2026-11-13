@@ -42,9 +42,17 @@ Each seam has one interface and at least two adapters.
 
 | Seam | Adapters |
 |---|---|
-| Leader source | serial, replay, synthetic |
+| Leader source | replay, synthetic, simulated (PyBullet); later serial |
 | Follower | PyBullet; later MuJoCo, Gazebo, physical SO-101 |
 | Mode | Interpret; later Mirror |
+
+## Simulation
+- The simulated Leader and the simulated Follower share one PyBullet world.
+- Each has a mortar and a pestle. Each pestle is a free rigid body.
+- A force-capped constraint holds each pestle. The cap sets how hard the pestle presses.
+- The simulated Leader reads force and centre of pressure from contact, as a load-cell plate does.
+- The Follower arm uses joint-space position control with capped torque.
+- A damped least-squares solver computes the joint targets. It does not use PyBullet's IK.
 
 ## Protocol
 - Payload: nanopb messages.
