@@ -24,10 +24,10 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for modules and seams.
 
 ## Quick start
 
-Requirements: [uv](https://docs.astral.sh/uv/) and `make`.
+Requirements: [uv](https://docs.astral.sh/uv/), `make` and a host C++17 compiler (g++ or clang) for the native tests.
 
 ```sh
-uv tool install platformio
+uv tool install platformio==6.2.0
 uv tool install clang-format==23.1.5
 make check
 ```
