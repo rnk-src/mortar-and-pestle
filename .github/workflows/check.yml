@@ -1,0 +1,30 @@
+# Runs the same `make check` that runs locally.
+name: check
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: host/uv.lock
+      - name: Cache PlatformIO packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: platformio-${{ runner.os }}-${{ hashFiles('firmware/platformio.ini') }}
+          restore-keys: platformio-${{ runner.os }}-
+      - name: Install PlatformIO and clang-format
+        run: |
+          uv tool install platformio
+          uv tool install clang-format==23.1.5
+      - run: make check
