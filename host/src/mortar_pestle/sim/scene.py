@@ -4,14 +4,18 @@ from collections.abc import Sequence
 
 from mortar_pestle.leaders import synthetic_samples
 from mortar_pestle.sim.leader import Hand, HandTarget
+from mortar_pestle.sim.world import PestleSpec
 from mortar_pestle.synthetic import StrokeSpec
 
 # The arm base is at the world origin. Its mortar sits in front of it.
 # The Leader mortar sits beside the Follower mortar, clear of the arm.
 FOLLOWER_MORTAR_XY_M = (0.19, 0.0)
 LEADER_MORTAR_XY_M = (0.19, -0.20)
-LEADER_COLOUR = (0.2, 0.5, 0.9)
-FOLLOWER_COLOUR = (0.85, 0.45, 0.2)
+
+# The Leader pestle is a light dummy that a weak hand can move.
+# The Follower pestle is a real stone pestle. The robot carries its weight.
+LEADER_PESTLE = PestleSpec(radius_m=0.008, length_m=0.10, mass_kg=0.03, colour=(0.2, 0.5, 0.9))
+FOLLOWER_PESTLE = PestleSpec(radius_m=0.010, length_m=0.10, mass_kg=0.40, colour=(0.35, 0.33, 0.32))
 
 
 def scripted_hand(specs: Sequence[StrokeSpec], loop: bool = False) -> Hand:

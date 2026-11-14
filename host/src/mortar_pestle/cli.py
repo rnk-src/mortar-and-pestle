@@ -147,18 +147,18 @@ def _run_sim(
     from mortar_pestle.sim.follower import PyBulletFollower
     from mortar_pestle.sim.leader import Hand, SimLeader
     from mortar_pestle.sim.scene import (
-        FOLLOWER_COLOUR,
         FOLLOWER_MORTAR_XY_M,
-        LEADER_COLOUR,
+        FOLLOWER_PESTLE,
         LEADER_MORTAR_XY_M,
+        LEADER_PESTLE,
         scripted_hand,
     )
     from mortar_pestle.sim.world import SimWorld, Station
 
     clock = ManualClock()
     world = SimWorld(gui=gui)
-    leader_station = Station(world, LEADER_MORTAR_XY_M, LEADER_COLOUR)
-    follower_station = Station(world, FOLLOWER_MORTAR_XY_M, FOLLOWER_COLOUR)
+    leader_station = Station(world, LEADER_MORTAR_XY_M, LEADER_PESTLE)
+    follower_station = Station(world, FOLLOWER_MORTAR_XY_M, FOLLOWER_PESTLE)
     mouse = None if auto else MouseHand(world, leader_station, mouse_scale)
     hand: Hand = scripted_hand(DEMO_STROKES, loop=True) if mouse is None else mouse
     leader = SimLeader(world, leader_station, hand, clock)
@@ -191,12 +191,12 @@ def _run_follower_only(
 ) -> int:
     from mortar_pestle.sim.app import Display
     from mortar_pestle.sim.follower import PyBulletFollower
-    from mortar_pestle.sim.scene import FOLLOWER_COLOUR, FOLLOWER_MORTAR_XY_M
+    from mortar_pestle.sim.scene import FOLLOWER_MORTAR_XY_M, FOLLOWER_PESTLE
     from mortar_pestle.sim.world import SimWorld, Station
 
     clock = ManualClock()
     world = SimWorld(gui=gui)
-    station = Station(world, FOLLOWER_MORTAR_XY_M, FOLLOWER_COLOUR)
+    station = Station(world, FOLLOWER_MORTAR_XY_M, FOLLOWER_PESTLE)
     follower = PyBulletFollower(world, station)
     display = Display(world, None, station) if gui else None
     try:
@@ -261,7 +261,7 @@ def _close(world: "SimWorld") -> None:
 
 _SIM_HELP_MOUSE = """
 Mortar & Pestle simulation
-  Blue pestle = Leader (you).  Orange pestle on the arm = Follower.
+  Blue pestle = Leader (you), light.  Stone pestle in the gripper = Follower, heavy.
   Move the mouse over the blue mortar: the pestle follows the cursor.
   Hold the left mouse button (or tap SPACE to toggle) to press down.
   The arm follows your pestle: circles, back and forth, pounding at any point.
@@ -271,7 +271,7 @@ Mortar & Pestle simulation
 """
 _SIM_HELP_AUTO = """
 Mortar & Pestle simulation (scripted hand)
-  Blue pestle = Leader.  Orange pestle on the arm = Follower.
+  Blue pestle = Leader, light.  Stone pestle in the gripper = Follower, heavy.
   The script grinds in circles with tremor, strokes back and forth,
   pounds at three points, then grinds the other way.
   The two gauges between the mortars show Leader force (blue) and Follower force (orange).
