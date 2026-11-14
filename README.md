@@ -22,11 +22,18 @@ The blue pestle is the Leader. The orange pestle on the SO-101 arm is the Follow
 
 - Move the mouse over the blue mortar. The pestle follows the cursor.
 - Hold the left mouse button, or tap SPACE, to press down.
-- Grind in circles for about two seconds. The arm then repeats the stroke with the same force.
+- The arm follows your pestle: circles, back-and-forth strokes, pounding at any point.
 - Use the up and down arrows to push harder or softer.
+- The two gauges between the mortars show the Leader force (blue) and the Follower force (orange).
+- The terminal shows a live readout: forces, the estimated stroke and the simulation speed.
 
-The Follower does not copy the raw motion. It estimates the stroke (pattern, rate, radius,
-direction, pressure) and then executes a clean stroke, so tremor does not reach it.
+There are two Modes:
+
+- `--mode mirror` (default): the Follower follows the Leader's position and force directly.
+  A low-pass filter removes tremor. The delay is about 70 ms.
+- `--mode interpret`: the Follower estimates the stroke (pattern, rate, radius, direction,
+  pressure) over a two-second window, then executes a clean stroke. It knows circular strokes
+  and pounding at one point.
 
 Other commands:
 
