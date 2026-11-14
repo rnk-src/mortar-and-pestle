@@ -12,6 +12,7 @@ class Pattern(StrEnum):
     IDLE = "idle"
     CIRCULAR = "circular"
     POUNDING = "pounding"
+    LINEAR = "linear"  # back and forth along one axis; Interpret Mode does not estimate it yet
 
 
 class Direction(StrEnum):
