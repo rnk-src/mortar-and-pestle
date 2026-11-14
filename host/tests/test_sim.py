@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from mortar_pestle.interpreter import InterpretMode
+from mortar_pestle.interpreter import InterpretMode, Mode
 from mortar_pestle.leaders import ReplayLeader, synthetic_samples
+from mortar_pestle.mirror import MirrorMode
 from mortar_pestle.pipeline import Pipeline, TickResult, run_ticks
 from mortar_pestle.ports import ManualClock
 from mortar_pestle.recorder import leader_samples, read_recording
@@ -220,3 +221,78 @@ def test_sim_leader_drives_the_follower_to_the_same_stroke_and_force(world: SimW
     follower_force = sum(r.state.contact_force_n for r in settled) / 150
     assert follower_force == pytest.approx(leader_force, abs=0.75)
     assert all(27.0 < math.hypot(r.state.x_mm, r.state.y_mm) < 33.0 for r in settled)
+
+
+# --- Mirror Mode through the physics ----------------------------------------------------
+
+
+def sim_session(
+    world: SimWorld, mode: Mode, specs: list[StrokeSpec], ticks: int
+) -> list[TickResult]:
+    """Run a scripted hand on the simulated Leader, with the simulated Follower beside it."""
+    clock = ManualClock()
+    leader = SimLeader(
+        world, Station(world, LEADER_MORTAR_XY_M, (0.2, 0.5, 0.9)), scripted_hand(specs), clock
+    )
+    follower = PyBulletFollower(world, Station(world, FOLLOWER_MORTAR_XY_M, (0.8, 0.4, 0.2)))
+    try:
+        return run_ticks(Pipeline(leader, mode, follower, ENVELOPE, clock), clock, ticks, TICK_US)
+    finally:
+        follower.close()
+
+
+def test_mirror_mode_follows_a_back_and_forth_stroke_with_matching_force(world: SimWorld) -> None:
+    stroke = StrokeSpec(
+        pattern=Pattern.LINEAR,
+        duration_s=4.0,
+        rate_hz=1.0,
+        radius_mm=30.0,
+        axis_deg=90.0,
+        pressure_n=8.0,
+    )
+
+    results = sim_session(world, MirrorMode(), [stroke], 400)
+
+    lag = 7  # ticks: about 50 ms of tremor filter plus 20 ms of arm response
+    errors_mm = []
+    for now, before in zip(results[150:], results[150 - lag :], strict=False):
+        assert before.record.sample is not None
+        errors_mm.append(
+            math.hypot(
+                now.state.x_mm - before.record.sample.x_mm,
+                now.state.y_mm - before.record.sample.y_mm,
+            )
+        )
+    assert sum(errors_mm) / len(errors_mm) < 2.0
+    assert max(errors_mm) < 3.0
+    ys = [r.state.y_mm for r in results[150:]]
+    assert max(ys) > 26.0
+    assert min(ys) < -26.0
+    forces = [r.state.contact_force_n for r in results[150:]]
+    assert sum(forces) / len(forces) == pytest.approx(8.0, abs=0.75)
+
+
+def test_mirror_mode_pounds_at_each_point_the_leader_pounds(world: SimWorld) -> None:
+    points = ((-20.0, -15.0), (20.0, 10.0), (0.0, 25.0))
+    pounding = StrokeSpec(
+        pattern=Pattern.POUNDING, duration_s=3.0, rate_hz=1.0, pressure_n=10.0, points_mm=points
+    )
+
+    results = sim_session(world, MirrorMode(), [pounding], 320)
+
+    for hit, (x_mm, y_mm) in enumerate(points):
+        window = results[hit * 100 : hit * 100 + 70]
+        hits = [r for r in window if r.state.contact_force_n > 6.0]
+        assert hits, hit
+        assert all(math.hypot(r.state.x_mm - x_mm, r.state.y_mm - y_mm) < 4.0 for r in hits), hit
+        # The Follower is up again before the next hit.
+        assert results[hit * 100 + 95].state.contact_force_n == 0.0, hit
+
+
+def test_mirror_mode_follows_a_circular_stroke_without_waiting(world: SimWorld) -> None:
+    results = sim_session(world, MirrorMode(), [CIRCLE], 100)
+
+    # Half a second after the Leader starts, the Follower already grinds on the circle.
+    for result in results[50:]:
+        assert result.state.contact_force_n > 6.0
+        assert math.hypot(result.state.x_mm, result.state.y_mm) == pytest.approx(30.0, abs=5.0)
