@@ -1,0 +1,67 @@
+<mujoco model="mortar_pestle">
+  <include file="so101.xml"/>
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+  <visual><global offwidth="1280" offheight="720"/></visual>
+  <worldbody>
+    <body name="follower_mortar" pos="0.19 0 0">
+    <geom name="follower_floor" type="box" size="0.05 0.05 0.005" pos="0 0 0.005" rgba="0.75 0.75 0.72 1" friction="0.2 0.005 0.0001" contype="1" conaffinity="1"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.05000 0.00000 0.0225" euler="0 0 0.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04830 0.01294 0.0225" euler="0 0 15.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04330 0.02500 0.0225" euler="0 0 30.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.03536 0.03536 0.0225" euler="0 0 45.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.02500 0.04330 0.0225" euler="0 0 60.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.01294 0.04830 0.0225" euler="0 0 75.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.00000 0.05000 0.0225" euler="0 0 90.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.01294 0.04830 0.0225" euler="0 0 105.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.02500 0.04330 0.0225" euler="0 0 120.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.03536 0.03536 0.0225" euler="0 0 135.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04330 0.02500 0.0225" euler="0 0 150.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04830 0.01294 0.0225" euler="0 0 165.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.05000 0.00000 0.0225" euler="0 0 180.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04830 -0.01294 0.0225" euler="0 0 195.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04330 -0.02500 0.0225" euler="0 0 210.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.03536 -0.03536 0.0225" euler="0 0 225.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.02500 -0.04330 0.0225" euler="0 0 240.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.01294 -0.04830 0.0225" euler="0 0 255.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.00000 -0.05000 0.0225" euler="0 0 270.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.01294 -0.04830 0.0225" euler="0 0 285.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.02500 -0.04330 0.0225" euler="0 0 300.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.03536 -0.03536 0.0225" euler="0 0 315.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04330 -0.02500 0.0225" euler="0 0 330.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04830 -0.01294 0.0225" euler="0 0 345.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+  </body>
+
+    <body name="leader_mortar" pos="0.19 -0.2 0">
+    <geom name="leader_floor" type="box" size="0.05 0.05 0.005" pos="0 0 0.005" rgba="0.75 0.75 0.72 1" friction="0.2 0.005 0.0001" contype="1" conaffinity="1"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.05000 0.00000 0.0225" euler="0 0 0.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04830 0.01294 0.0225" euler="0 0 15.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04330 0.02500 0.0225" euler="0 0 30.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.03536 0.03536 0.0225" euler="0 0 45.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.02500 0.04330 0.0225" euler="0 0 60.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.01294 0.04830 0.0225" euler="0 0 75.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.00000 0.05000 0.0225" euler="0 0 90.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.01294 0.04830 0.0225" euler="0 0 105.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.02500 0.04330 0.0225" euler="0 0 120.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.03536 0.03536 0.0225" euler="0 0 135.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04330 0.02500 0.0225" euler="0 0 150.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04830 0.01294 0.0225" euler="0 0 165.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.05000 0.00000 0.0225" euler="0 0 180.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04830 -0.01294 0.0225" euler="0 0 195.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.04330 -0.02500 0.0225" euler="0 0 210.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.03536 -0.03536 0.0225" euler="0 0 225.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.02500 -0.04330 0.0225" euler="0 0 240.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.01294 -0.04830 0.0225" euler="0 0 255.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="-0.00000 -0.05000 0.0225" euler="0 0 270.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.01294 -0.04830 0.0225" euler="0 0 285.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.02500 -0.04330 0.0225" euler="0 0 300.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.03536 -0.03536 0.0225" euler="0 0 315.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04330 -0.02500 0.0225" euler="0 0 330.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+    <geom type="box" size="0.002 0.00654 0.0125" pos="0.04830 -0.01294 0.0225" euler="0 0 345.000" rgba="0.6 0.6 0.58 1" contype="0" conaffinity="0"/>
+  </body>
+
+    <body name="leader_pestle" pos="0.19 -0.2 0.07500000000000001">
+      <freejoint name="leader_pestle_free"/>
+      <geom name="leader_pestle_geom" type="capsule" fromto="0 0 -0.042 0 0 0.042" size="0.008" mass="0.03" rgba="0.2 0.5 0.9 1" friction="0.2 0.005 0.0001" contype="1" conaffinity="1"/>
+    </body>
+  </worldbody>
+</mujoco>

@@ -1,0 +1,15 @@
+{
+  "name": "mortar-pestle-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scene": "node scripts/build-scene.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mujoco/mujoco": "4.0.1"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
