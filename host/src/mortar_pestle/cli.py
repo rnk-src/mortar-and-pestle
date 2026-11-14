@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 ENVELOPE = SafetyEnvelope()
 STATUS_EVERY_TICKS = 10
+MAX_FAULTS_IN_A_ROW = 20  # more than this is a real fault, not a transient one
 
 SAMPLE_STROKES = (
     StrokeSpec(
@@ -227,9 +228,23 @@ def _loop(
     pipeline = Pipeline(leader, MODES[mode_name](), follower, ENVELOPE, clock, recorder)
     pacer = RealTimePacer(ENVELOPE.tick_us) if display is not None else None
     ticks = 0
+    faults = 0  # ticks skipped because PyBullet failed although the window was open
+    faults_in_a_row = 0
     try:
         while (max_ticks is None or ticks < max_ticks) and p.isConnected(world.client):
-            result = pipeline.tick()
+            try:
+                result = pipeline.tick()
+            except p.error:
+                # Closing the window disconnects the client: stop. Otherwise skip this tick.
+                # The next tick sends every target again, so one lost tick does no harm.
+                if not p.isConnected(world.client):
+                    break
+                faults += 1
+                faults_in_a_row += 1
+                if faults_in_a_row > MAX_FAULTS_IN_A_ROW:
+                    raise
+                continue
+            faults_in_a_row = 0
             clock.advance(ENVELOPE.tick_us)
             ticks += 1
             if display is not None and pacer is not None:
@@ -242,13 +257,11 @@ def _loop(
                 pacer.wait()
     except KeyboardInterrupt:
         pass
-    except p.error:
-        # Closing the window disconnects the client. Any other PyBullet error is a real fault.
-        if p.isConnected(world.client):
-            raise
     finally:
         if display is not None:
             print()
+        if faults:
+            print(f"Skipped {faults} of {ticks + faults} ticks after transient PyBullet errors.")
         if recorder is not None:
             recorder.close()
 
