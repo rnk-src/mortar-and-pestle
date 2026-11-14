@@ -9,7 +9,7 @@
     "build": "npm run prepare-assets && tsc -p . && vite build",
     "typecheck": "tsc -p .",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run test"
+    "check": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@mujoco/mujoco": "4.0.1",

@@ -3,6 +3,9 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { simplifyStl } from './simplify-stl.mjs';
+
+const CELL_M = 0.0011; // decimation grid, about 1 mm: the arm meshes are display-only
 
 const web = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const pub = path.join(web, 'public');
@@ -15,7 +18,9 @@ fs.mkdirSync(path.join(pub, 'py'), { recursive: true });
 
 for (const f of ['scene.xml', 'so101.xml']) fs.copyFileSync(path.join(web, 'scene', f), path.join(pub, 'scene', f));
 const stl = fs.readdirSync(meshes).filter((f) => f.endsWith('.stl'));
-for (const f of stl) fs.copyFileSync(path.join(meshes, f), path.join(pub, 'scene/assets', f));
+for (const f of stl) {
+  fs.writeFileSync(path.join(pub, 'scene/assets', f), simplifyStl(fs.readFileSync(path.join(meshes, f)), CELL_M));
+}
 fs.writeFileSync(path.join(pub, 'scene/manifest.json'), JSON.stringify({ meshes: stl }));
 
 fs.copyFileSync(path.join(web, 'py/browser.py'), path.join(pub, 'py/browser.py'));

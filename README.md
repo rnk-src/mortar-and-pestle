@@ -43,6 +43,26 @@ uv run mortar-pestle replay ../recordings/circular_1p5hz_30mm.jsonl --gui
 uv run mortar-pestle sim --auto --record session.jsonl
 ```
 
+## Run in the browser
+
+The simulation also runs in a web page, with no PyBullet.
+
+```sh
+cd web
+npm ci
+npm run dev
+```
+
+Open the printed address. The page loads MuJoCo (WASM) and Pyodide, then starts.
+Pyodide loads from a CDN. The page runs the same Python pipeline as `mortar-pestle sim`.
+
+- Move the pointer over the blue mortar. Hold the button to press.
+- On a touch screen, drag to move and hold to press.
+- Use the arrow keys or the + and - buttons to push harder or softer.
+- Choose Mirror or Interpret. Choose Demo hand to watch a scripted hand.
+
+`npm run build` writes the static site to `web/dist`.
+
 ## Layout
 
 | Path | Content |
@@ -50,6 +70,7 @@ uv run mortar-pestle sim --auto --record session.jsonl
 | `protocol/` | Message schema, framing spec, golden vectors |
 | `firmware/` | PlatformIO project for the Leader; `lib/core` is hardware-free and tested natively |
 | `host/` | Python package: interpreter, safety governor, recorder, adapters, CLI |
+| `web/` | Browser demo: MuJoCo WASM, Pyodide, Three.js |
 | `sim/assets/` | SO-101 model files |
 | `cad/` | Parametric CAD scripts (build123d) |
 | `recordings/` | Sample sessions for replay tests |
@@ -65,5 +86,5 @@ uv tool install clang-format==23.1.5
 make check
 ```
 
-`make check` runs the format check, lint, type check, Python tests, C++ native tests and an ESP32 compile.
+`make check` runs the format check, lint, type check, Python tests, C++ native tests, an ESP32 compile and the browser demo check (Node 22).
 It never uploads firmware.
