@@ -125,8 +125,14 @@ export class View {
   resize(width: number, height: number): void {
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / Math.max(1, height);
-    // Keep both mortars in view on tall, narrow screens.
-    this.camera.fov = this.camera.aspect < 1 ? 62 : 38;
+    // Keep the same horizontal view when the frame is narrower than 16:9, so the arm and both
+    // mortars stay in view. Cap the vertical angle for very tall frames.
+    const wide = 16 / 9;
+    const halfWidth = Math.tan(THREE.MathUtils.degToRad(38 / 2)) * wide;
+    this.camera.fov =
+      this.camera.aspect >= wide
+        ? 38
+        : Math.min(78, THREE.MathUtils.radToDeg(2 * Math.atan(halfWidth / this.camera.aspect)));
     this.camera.updateProjectionMatrix();
   }
 
