@@ -19,7 +19,7 @@ function mortar(name, [x, y]) {
 const [lx, ly] = stations.leader;
 const scene = `<mujoco model="mortar_pestle">
   <include file="so101.xml"/>
-  <option timestep="0.002" gravity="0 0 -9.81"/>
+  <option timestep="0.002" gravity="0 0 -9.81" cone="elliptic"/>
   <visual><global offwidth="1280" offheight="720"/></visual>
   <worldbody>
     ${mortar('follower', stations.follower)}
