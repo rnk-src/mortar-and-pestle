@@ -10,6 +10,31 @@ The system reads the user's intent, removes tremor, and applies the force the us
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for modules and seams.
 
+## Try it
+
+```sh
+cd host
+uv run mortar-pestle sim          # you move the Leader pestle with the mouse
+uv run mortar-pestle sim --auto   # a scripted hand moves it
+```
+
+The blue pestle is the Leader. The orange pestle on the SO-101 arm is the Follower.
+
+- Move the mouse over the blue mortar. The pestle follows the cursor.
+- Hold the left mouse button, or tap SPACE, to press down.
+- Grind in circles for about two seconds. The arm then repeats the stroke with the same force.
+- Use the up and down arrows to push harder or softer.
+
+The Follower does not copy the raw motion. It estimates the stroke (pattern, rate, radius,
+direction, pressure) and then executes a clean stroke, so tremor does not reach it.
+
+Other commands:
+
+```sh
+uv run mortar-pestle replay ../recordings/circular_1p5hz_30mm.jsonl --gui
+uv run mortar-pestle sim --auto --record session.jsonl
+```
+
 ## Layout
 
 | Path | Content |

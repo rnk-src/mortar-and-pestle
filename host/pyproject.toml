@@ -3,7 +3,12 @@ name = "mortar-pestle"
 version = "0.1.0"
 description = "Host software for the assistive teleoperated mortar and pestle"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pybullet>=3.2.7",
+]
+
+[project.scripts]
+mortar-pestle = "mortar_pestle.cli:main"
 
 [dependency-groups]
 dev = [
@@ -33,3 +38,12 @@ files = ["src", "tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+# PyBullet has no wheel for Apple Silicon. Its bundled zlib defines an fdopen
+# macro that breaks against current macOS SDKs; this flag disables the macro.
+[tool.uv.extra-build-variables]
+pybullet = { CFLAGS = "-Dfdopen=fdopen" }
+
+[[tool.mypy.overrides]]
+module = ["pybullet", "pybullet_data"]
+ignore_missing_imports = true
