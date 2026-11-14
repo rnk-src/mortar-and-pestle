@@ -58,7 +58,11 @@ Each seam has one interface and at least two adapters.
 ## Simulation
 - The simulated Leader and the simulated Follower share one PyBullet world.
 - Each has a mortar and a pestle. Each pestle is a free rigid body.
-- A force-capped constraint holds each pestle. The cap sets how hard the pestle presses.
+- The Leader pestle is a light dummy (30 g). The Follower pestle is a stone pestle (400 g).
+- Leader: a force-capped constraint holds the pestle. The cap sets how hard the hand presses.
+- Follower: the gripper jaws close on the pestle. The grasp is rigid sideways. The pestle
+  slides a few millimetres along its axis, and the adapter sets the force along that axis.
+  The arm carries the pestle's weight and feels the pressing force as a reaction.
 - The simulated Leader reads force and centre of pressure from contact, as a load-cell plate does.
 - The Follower arm uses joint-space position control with capped torque.
 - A damped least-squares solver computes the joint targets. It does not use PyBullet's IK.
