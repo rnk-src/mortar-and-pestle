@@ -63,6 +63,14 @@ class SimWorld:
         p.setTimeStep(tick_us / 1_000_000 / substeps, physicsClientId=self.client)
         p.setAdditionalSearchPath(pybullet_data.getDataPath(), physicsClientId=self.client)
         p.loadURDF("plane.urdf", physicsClientId=self.client)
+        if gui:
+            # Building the scene with rendering on costs about 50 ms per body.
+            p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0, physicsClientId=self.client)
+
+    def show(self) -> None:
+        """Turn rendering on. Call it once the scene is built."""
+        if self.gui:
+            p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1, physicsClientId=self.client)
 
     def step(self) -> None:
         """Advance the physics by one pipeline tick."""
@@ -120,8 +128,12 @@ class Station:
 
         This is what a load-cell plate under the mortar measures.
         """
-        points = p.getContactPoints(
-            bodyA=self.pestle_id, bodyB=self.mortar_id, physicsClientId=self._client
+        # PyBullet returns None instead of a list when the GUI is too busy to answer in time.
+        points = (
+            p.getContactPoints(
+                bodyA=self.pestle_id, bodyB=self.mortar_id, physicsClientId=self._client
+            )
+            or ()
         )
         force_n = float(sum(point[9] for point in points))
         if force_n < CONTACT_THRESHOLD_N:
