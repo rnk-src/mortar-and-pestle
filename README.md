@@ -18,7 +18,8 @@ uv run mortar-pestle sim          # you move the Leader pestle with the mouse
 uv run mortar-pestle sim --auto   # a scripted hand moves it
 ```
 
-The blue pestle is the Leader. The orange pestle on the SO-101 arm is the Follower.
+The blue pestle is the Leader: a light dummy (30 g). The stone pestle in the SO-101 gripper
+is the Follower's: a real pestle (400 g) that the arm carries.
 
 - Move the mouse over the blue mortar. The pestle follows the cursor.
 - Hold the left mouse button, or tap SPACE, to press down.
