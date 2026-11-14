@@ -16,7 +16,13 @@ from mortar_pestle.recorder import leader_samples, read_recording
 from mortar_pestle.safety import SafetyEnvelope
 from mortar_pestle.sim.follower import PyBulletFollower
 from mortar_pestle.sim.leader import HandTarget, SimLeader
-from mortar_pestle.sim.scene import FOLLOWER_MORTAR_XY_M, LEADER_MORTAR_XY_M, scripted_hand
+from mortar_pestle.sim.scene import (
+    FOLLOWER_MORTAR_XY_M,
+    FOLLOWER_PESTLE,
+    LEADER_MORTAR_XY_M,
+    LEADER_PESTLE,
+    scripted_hand,
+)
 from mortar_pestle.sim.world import SimWorld, Station
 from mortar_pestle.synthetic import StrokeSpec
 from mortar_pestle.types import Direction, FollowerCommand, LeaderSample, Pattern
@@ -43,7 +49,7 @@ def world() -> Iterator[SimWorld]:
 
 @pytest.fixture
 def follower(world: SimWorld) -> Iterator[PyBulletFollower]:
-    follower = PyBulletFollower(world, Station(world, FOLLOWER_MORTAR_XY_M, (0.8, 0.4, 0.2)))
+    follower = PyBulletFollower(world, Station(world, FOLLOWER_MORTAR_XY_M, FOLLOWER_PESTLE))
     yield follower
     follower.close()
 
@@ -70,7 +76,8 @@ def test_follower_holds_the_pestle_above_the_mortar_when_lifted(
     assert state.contact_force_n == 0.0
 
 
-@pytest.mark.parametrize("pressure_n", [3.0, 8.0, 15.0])
+# 1 N and 3 N are less than the weight of the Follower pestle: the arm must carry the rest.
+@pytest.mark.parametrize("pressure_n", [1.0, 3.0, 8.0, 15.0])
 def test_follower_presses_with_the_requested_pressure(
     follower: PyBulletFollower, pressure_n: float
 ) -> None:
@@ -96,6 +103,10 @@ def test_follower_reaches_targets_across_the_whole_workspace(
         assert state.z_mm == pytest.approx(10.0, abs=2.0), angle_deg
 
 
+def test_follower_pestle_is_much_heavier_than_the_leader_pestle() -> None:
+    assert FOLLOWER_PESTLE.mass_kg >= 10 * LEADER_PESTLE.mass_kg
+
+
 # --- Simulated Leader adapter -----------------------------------------------------------
 
 
@@ -103,7 +114,7 @@ def test_sim_leader_reports_the_force_and_position_of_a_pressing_hand(world: Sim
     clock = ManualClock()
     target = HandTarget(20.0, -10.0, True, 6.0)
     leader = SimLeader(
-        world, Station(world, LEADER_MORTAR_XY_M, (0.2, 0.5, 0.9)), lambda: target, clock
+        world, Station(world, LEADER_MORTAR_XY_M, LEADER_PESTLE), lambda: target, clock
     )
 
     for _ in range(100):
@@ -122,7 +133,7 @@ def test_sim_leader_reports_no_contact_for_a_hovering_hand(world: SimWorld) -> N
     clock = ManualClock()
     target = HandTarget(0.0, 0.0, False, 6.0)
     leader = SimLeader(
-        world, Station(world, LEADER_MORTAR_XY_M, (0.2, 0.5, 0.9)), lambda: target, clock
+        world, Station(world, LEADER_MORTAR_XY_M, LEADER_PESTLE), lambda: target, clock
     )
 
     for _ in range(50):
@@ -188,7 +199,7 @@ def test_replaying_the_same_recording_twice_gives_identical_intents(world: SimWo
     samples = leader_samples(read_recording(RECORDING))
 
     def intents(xy_m: tuple[float, float]) -> list[object]:
-        follower = PyBulletFollower(world, Station(world, xy_m, (0.8, 0.4, 0.2)))
+        follower = PyBulletFollower(world, Station(world, xy_m, FOLLOWER_PESTLE))
         try:
             return [r.record.intent for r in replay(follower, samples, len(samples))]
         finally:
@@ -201,11 +212,11 @@ def test_sim_leader_drives_the_follower_to_the_same_stroke_and_force(world: SimW
     clock = ManualClock()
     leader = SimLeader(
         world,
-        Station(world, LEADER_MORTAR_XY_M, (0.2, 0.5, 0.9)),
+        Station(world, LEADER_MORTAR_XY_M, LEADER_PESTLE),
         scripted_hand([CIRCLE]),
         clock,
     )
-    follower = PyBulletFollower(world, Station(world, FOLLOWER_MORTAR_XY_M, (0.8, 0.4, 0.2)))
+    follower = PyBulletFollower(world, Station(world, FOLLOWER_MORTAR_XY_M, FOLLOWER_PESTLE))
     pipeline = Pipeline(leader, InterpretMode(), follower, ENVELOPE, clock)
 
     results = run_ticks(pipeline, clock, 600, TICK_US)
@@ -232,9 +243,9 @@ def sim_session(
     """Run a scripted hand on the simulated Leader, with the simulated Follower beside it."""
     clock = ManualClock()
     leader = SimLeader(
-        world, Station(world, LEADER_MORTAR_XY_M, (0.2, 0.5, 0.9)), scripted_hand(specs), clock
+        world, Station(world, LEADER_MORTAR_XY_M, LEADER_PESTLE), scripted_hand(specs), clock
     )
-    follower = PyBulletFollower(world, Station(world, FOLLOWER_MORTAR_XY_M, (0.8, 0.4, 0.2)))
+    follower = PyBulletFollower(world, Station(world, FOLLOWER_MORTAR_XY_M, FOLLOWER_PESTLE))
     try:
         return run_ticks(Pipeline(leader, mode, follower, ENVELOPE, clock), clock, ticks, TICK_US)
     finally:
