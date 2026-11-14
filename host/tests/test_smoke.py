@@ -1,5 +1,7 @@
+from importlib.metadata import version
+
 import mortar_pestle
 
 
-def test_package_exposes_version() -> None:
-    assert mortar_pestle.__version__ == "0.1.0"
+def test_package_version_matches_project_metadata() -> None:
+    assert mortar_pestle.__version__ == version("mortar-pestle")
