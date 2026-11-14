@@ -59,6 +59,8 @@ export class World {
   readonly mj: any;
   readonly model: any;
   readonly data: any;
+  /** Run before every substep, e.g. a hand holding the Leader pestle. */
+  readonly hooks: (() => void)[] = [];
 
   constructor(mj: any, model: any, data: any) {
     this.mj = mj;
@@ -95,6 +97,7 @@ export class World {
   /** Advance one tick (SUBSTEPS physics steps). beforeSubstep applies forces each substep. */
   step(beforeSubstep?: () => void): void {
     for (let i = 0; i < SUBSTEPS; i++) {
+      for (const hook of this.hooks) hook();
       beforeSubstep?.();
       this.mj.mj_step(this.model, this.data);
     }
