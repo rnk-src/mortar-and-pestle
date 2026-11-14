@@ -33,8 +33,8 @@ _DOWN: Vec3 = (0.0, 0.0, -1.0)
 
 
 class ArmKinematics:
-    def __init__(self, urdf_path: Path, tip_offset_m: float) -> None:
-        """tip_offset_m is the distance from the tool frame origin to the tracked tip point."""
+    def __init__(self, urdf_path: Path, tip_offset_m: Vec3) -> None:
+        """tip_offset_m is the tracked tip point in the tool frame."""
         self._client: int = p.connect(p.DIRECT)
         self._robot: int = p.loadURDF(
             str(urdf_path), useFixedBase=True, physicsClientId=self._client
@@ -81,10 +81,11 @@ class ArmKinematics:
         )
         origin, matrix = state[4], p.getMatrixFromQuaternion(state[5])
         axis = (matrix[2], matrix[5], matrix[8])
+        offset = self._tip_offset_m
         return [
-            origin[0] + self._tip_offset_m * axis[0],
-            origin[1] + self._tip_offset_m * axis[1],
-            origin[2] + self._tip_offset_m * axis[2],
+            origin[0] + matrix[0] * offset[0] + matrix[1] * offset[1] + matrix[2] * offset[2],
+            origin[1] + matrix[3] * offset[0] + matrix[4] * offset[1] + matrix[5] * offset[2],
+            origin[2] + matrix[6] * offset[0] + matrix[7] * offset[1] + matrix[8] * offset[2],
             _AXIS_WEIGHT_M * axis[0],
             _AXIS_WEIGHT_M * axis[1],
             _AXIS_WEIGHT_M * axis[2],
