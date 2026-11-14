@@ -15,7 +15,6 @@ from mortar_pestle.ports import Clock
 from mortar_pestle.sim.world import (
     HOLD_FORCE_N,
     MORTAR_RADIUS_M,
-    PESTLE_RADIUS_M,
     PRESS_DEPTH_M,
     SimWorld,
     Station,
@@ -24,7 +23,7 @@ from mortar_pestle.sim.world import (
 from mortar_pestle.types import LeaderSample
 
 HOVER_MM = 15.0
-MAX_RADIUS_MM = (MORTAR_RADIUS_M - PESTLE_RADIUS_M) * 1000
+MAX_RADIUS_MM = (MORTAR_RADIUS_M - 0.008) * 1000  # keeps a slim pestle inside the wall
 
 
 @dataclass(frozen=True)
@@ -73,7 +72,9 @@ class SimLeader:
                 self._station.pestle_centre_for_tip(target.x_mm * scale, target.y_mm * scale, z_mm)
             ),
             [0, 0, 0, 1],
-            maxForce=press_cap_n(target.force_n) if target.down else HOLD_FORCE_N,
+            maxForce=press_cap_n(target.force_n, self._station.pestle.weight_n)
+            if target.down
+            else HOLD_FORCE_N,
             physicsClientId=self._client,
         )
 
