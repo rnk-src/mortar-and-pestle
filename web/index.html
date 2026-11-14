@@ -45,7 +45,19 @@
       #status.error .spin { display: none; }
       @keyframes spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+      .solo { border: 2px solid var(--line); }
+      #fullscreen[hidden] { display: none; }
       @media (max-width: 520px) { .hint { display: none; } .readout { font-size: 11px; } }
+      /* A small frame, e.g. a phone: keep the controls, drop the text. */
+      @media (max-height: 380px) {
+        .hud { padding: 6px; }
+        .panel:has(#readout) { display: none; }
+        button { min-height: 30px; padding: 4px 9px; font-size: 12px; }
+        .bar { height: 44px; }
+        .gauge { font-size: 11px; gap: 2px; }
+        .panel { padding: 4px 6px; }
+        .gauges { gap: 8px; }
+      }
     </style>
   </head>
   <body data-state="loading">
@@ -56,6 +68,7 @@
           <button type="button" data-mode="mirror" aria-pressed="true">Mirror</button>
           <button type="button" data-mode="interpret" aria-pressed="false">Interpret</button>
         </div>
+        <button type="button" id="fullscreen" class="solo" hidden aria-label="Toggle fullscreen">⤢</button>
         <div class="group" role="group" aria-label="Hand">
           <button type="button" data-hand="auto" aria-pressed="true">Demo hand</button>
           <button type="button" data-hand="mine" aria-pressed="false">My hand</button>

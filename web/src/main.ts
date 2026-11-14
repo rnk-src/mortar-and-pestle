@@ -27,6 +27,17 @@ async function text(url: string): Promise<string> {
   return res.text();
 }
 
+// The host page may send pause or resume before the simulation has loaded. Listen from the
+// start and remember the latest request. start() applies it.
+let wantPaused = false;
+let applyPause: ((paused: boolean) => void) | null = null;
+window.addEventListener('message', (e) => {
+  const kind = typeof e.data === 'string' ? e.data : e.data?.type;
+  if (kind !== 'pause' && kind !== 'resume') return;
+  wantPaused = kind === 'pause';
+  applyPause?.(wantPaused);
+});
+
 async function boot(): Promise<void> {
   detail('Loading the physics engine and Python…');
   const [{ default: loadMujoco }, { loadPyodide }] = await Promise.all([
@@ -144,11 +155,16 @@ function start(session: Session, view: View): void {
     last = performance.now();
     setState(p ? 'paused' : 'running');
   };
-  window.addEventListener('message', (e) => {
-    if (e.data === 'pause' || e.data?.type === 'pause') pause(true);
-    else if (e.data === 'resume' || e.data?.type === 'resume') pause(false);
-  });
-  document.addEventListener('visibilitychange', () => pause(document.hidden));
+  applyPause = (p) => pause(p || document.hidden);
+  document.addEventListener('visibilitychange', () => pause(document.hidden || wantPaused));
+  const fullscreenButton = $<HTMLButtonElement>('#fullscreen');
+  if (document.fullscreenEnabled) {
+    fullscreenButton.hidden = false;
+    fullscreenButton.addEventListener('click', () => {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      else void document.documentElement.requestFullscreen();
+    });
+  }
 
   const gauge = (sel: string, n: number) => (($(`${sel} i`) as HTMLElement).style.height = `${Math.min(100, (n / MAX_FORCE_N) * 100)}%`);
   const hud = () => {
@@ -196,6 +212,7 @@ function start(session: Session, view: View): void {
 
   statusBox.hidden = true;
   setState('running');
+  if (wantPaused) pause(true);
   (window as any).__sim = { session, view, get latest() { return latest; }, LEADER };
   // Reduced motion: start paused with the poster-like first frame; the user can press a key.
   if (reduced) $('#hint').textContent += ' Animation is on because you opened the demo.';
