@@ -7,6 +7,7 @@ force-capped constraint, so the cap sets how hard the pestle can press.
 
 import math
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,10 +19,6 @@ Vec3 = tuple[float, float, float]
 MORTAR_RADIUS_M = 0.05
 MORTAR_FLOOR_HEIGHT_M = 0.01
 MORTAR_WALL_HEIGHT_M = 0.025
-PESTLE_RADIUS_M = 0.008
-PESTLE_LENGTH_M = 0.10
-PESTLE_MASS_KG = 0.03
-PESTLE_WEIGHT_N = PESTLE_MASS_KG * 9.81
 FRICTION = 0.2
 CONTACT_THRESHOLD_N = 0.2
 PRESS_DEPTH_M = 0.003  # how far below the floor a pressing hold aims
@@ -37,12 +34,26 @@ def assets_dir() -> Path:
     return Path(__file__).resolve().parents[4] / "sim" / "assets"
 
 
-def press_cap_n(pressure_n: float) -> float:
-    """Return the hold-force cap that makes the pestle press with pressure_n.
+@dataclass(frozen=True)
+class PestleSpec:
+    """A pestle: a rod with round ends."""
+
+    radius_m: float
+    length_m: float
+    mass_kg: float
+    colour: Vec3
+
+    @property
+    def weight_n(self) -> float:
+        return self.mass_kg * 9.81
+
+
+def press_cap_n(pressure_n: float, weight_n: float) -> float:
+    """Return the hold-force cap that makes a pestle of weight_n press with pressure_n.
 
     The pestle's own weight also presses, so the hold supplies the rest.
     """
-    return max(pressure_n - PESTLE_WEIGHT_N, MIN_PRESS_FORCE_N)
+    return max(pressure_n - weight_n, MIN_PRESS_FORCE_N)
 
 
 @dataclass(frozen=True)
@@ -72,9 +83,15 @@ class SimWorld:
         if self.gui:
             p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1, physicsClientId=self.client)
 
-    def step(self) -> None:
-        """Advance the physics by one pipeline tick."""
+    def step(self, before_substep: Callable[[], None] | None = None) -> None:
+        """Advance the physics by one pipeline tick.
+
+        before_substep runs before every physics substep. External forces last for one
+        substep only, so a caller that applies one must do it there.
+        """
         for _ in range(self._substeps):
+            if before_substep is not None:
+                before_substep()
             p.stepSimulation(physicsClientId=self.client)
 
     def close(self) -> None:
@@ -84,11 +101,14 @@ class SimWorld:
 class Station:
     """One mortar and one pestle. The mortar frame origin is the centre of the floor top."""
 
-    def __init__(self, world: SimWorld, centre_xy_m: tuple[float, float], colour: Vec3) -> None:
+    def __init__(
+        self, world: SimWorld, centre_xy_m: tuple[float, float], pestle: PestleSpec
+    ) -> None:
         self._client = world.client
         self.origin_m: Vec3 = (centre_xy_m[0], centre_xy_m[1], MORTAR_FLOOR_HEIGHT_M)
         self.mortar_id = self._create_mortar()
-        self.pestle_id = self._create_pestle(colour)
+        self.pestle = pestle
+        self.pestle_id = self._create_pestle()
 
     def to_world(self, x_mm: float, y_mm: float, z_mm: float) -> Vec3:
         """Convert a mortar-frame position to world metres."""
@@ -101,7 +121,7 @@ class Station:
     def pestle_centre_for_tip(self, x_mm: float, y_mm: float, z_mm: float) -> Vec3:
         """Return the world position of an upright pestle's centre for a given tip position."""
         tip = self.to_world(x_mm, y_mm, z_mm)
-        return (tip[0], tip[1], tip[2] + PESTLE_LENGTH_M / 2)
+        return (tip[0], tip[1], tip[2] + self.pestle.length_m / 2)
 
     def tip_mm(self) -> Vec3:
         """Return the pestle tip (its lowest point) in the mortar frame."""
@@ -110,11 +130,11 @@ class Station:
         )
         matrix = p.getMatrixFromQuaternion(orientation)
         axis = (matrix[2], matrix[5], matrix[8])  # pestle long axis in the world
-        reach = PESTLE_LENGTH_M / 2 - PESTLE_RADIUS_M  # centre of the tip sphere
+        reach = self.pestle.length_m / 2 - self.pestle.radius_m  # centre of the tip sphere
         return (
             (position[0] - axis[0] * reach - self.origin_m[0]) * 1000,
             (position[1] - axis[1] * reach - self.origin_m[1]) * 1000,
-            (position[2] - axis[2] * reach - PESTLE_RADIUS_M - self.origin_m[2]) * 1000,
+            (position[2] - axis[2] * reach - self.pestle.radius_m - self.origin_m[2]) * 1000,
         )
 
     def pestle_quat_wxyz(self) -> tuple[float, float, float, float]:
@@ -191,23 +211,24 @@ class Station:
                 physicsClientId=self._client,
             )
 
-    def _create_pestle(self, colour: Vec3) -> int:
-        cylinder_height = PESTLE_LENGTH_M - 2 * PESTLE_RADIUS_M
+    def _create_pestle(self) -> int:
+        pestle = self.pestle
+        cylinder_height = pestle.length_m - 2 * pestle.radius_m
         collision = p.createCollisionShape(
             p.GEOM_CAPSULE,
-            radius=PESTLE_RADIUS_M,
+            radius=pestle.radius_m,
             height=cylinder_height,
             physicsClientId=self._client,
         )
         visual = p.createVisualShape(
             p.GEOM_CAPSULE,
-            radius=PESTLE_RADIUS_M,
+            radius=pestle.radius_m,
             length=cylinder_height,
-            rgbaColor=[*colour, 1],
+            rgbaColor=[*pestle.colour, 1],
             physicsClientId=self._client,
         )
         pestle_id: int = p.createMultiBody(
-            baseMass=PESTLE_MASS_KG,
+            baseMass=pestle.mass_kg,
             baseCollisionShapeIndex=collision,
             baseVisualShapeIndex=visual,
             basePosition=list(self.pestle_centre_for_tip(0.0, 0.0, 15.0)),
