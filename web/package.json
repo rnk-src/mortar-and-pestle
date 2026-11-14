@@ -3,16 +3,24 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare-assets": "node scripts/prepare-assets.mjs",
     "scene": "node scripts/build-scene.mjs",
-    "test": "vitest run"
+    "dev": "npm run prepare-assets && vite",
+    "build": "npm run prepare-assets && tsc -p . && vite build",
+    "typecheck": "tsc -p .",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run test"
   },
   "dependencies": {
-    "@mujoco/mujoco": "4.0.1"
+    "@mujoco/mujoco": "4.0.1",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@types/three": "^0.170.0",
     "pyodide": "^0.29.0",
     "typescript": "^7.0.2",
+    "vite": "^6.4.6",
     "vitest": "^3.2.4"
   }
 }

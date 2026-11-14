@@ -23,6 +23,7 @@ test('scripted hand through the Python pipeline moves the Follower and presses',
   const glue = fs.readFileSync(path.join(here, '../py/browser.py'), 'utf8');
   const session = Session.create({ pyodide, world, wheel, glue, mode: 'mirror' });
 
+  const pressing: { leader: number; follower: number }[] = [];
   let maxLeader = 0;
   let maxFollower = 0;
   let last = session.tick();
@@ -31,6 +32,9 @@ test('scripted hand through the Python pipeline moves the Follower and presses',
     last = session.tick(); // 7 s of simulated time: 1 s idle, then the circular stroke
     maxLeader = Math.max(maxLeader, last.leader_force_n);
     maxFollower = Math.max(maxFollower, last.state.contact_force_n);
+    if (i > 250 && last.command.lift_mm === 0) {
+      pressing.push({ leader: last.leader_force_n, follower: last.state.contact_force_n });
+    }
     // Safety Envelope: the commanded radius never exceeds 40 mm
     expect(Math.hypot(last.command.x_mm, last.command.y_mm)).toBeLessThanOrEqual(40.01);
     if (last.intent.pattern === 'circular') {
@@ -41,6 +45,13 @@ test('scripted hand through the Python pipeline moves the Follower and presses',
   expect(maxLeader).toBeGreaterThan(3);
   expect(maxFollower).toBeGreaterThan(3); // the Follower follows the Leader's force
   expect(Number.isFinite(last.state.x_mm)).toBe(true);
+  // No contact chatter: while pressing, the Follower force stays near the Leader force.
+  const q = (a: number[], p: number) => [...a].sort((x, y) => x - y)[Math.floor(p * (a.length - 1))];
+  const leader50 = q(pressing.map((p) => p.leader), 0.5);
+  const follower = pressing.map((p) => p.follower);
+  expect(pressing.length).toBeGreaterThan(100);
+  expect(Math.abs(q(follower, 0.5) - leader50)).toBeLessThan(0.25 * leader50);
+  expect(q(follower, 0.9)).toBeLessThan(1.6 * leader50);
   expect(sawCircular).toBe(true);
   expect(circularRate).toBeGreaterThan(1.0); // the scripted stroke is 1.2 Hz
   expect(circularRate).toBeLessThan(1.4);

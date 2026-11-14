@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mortar and Pestle simulation</title>
+    <style>
+      :root {
+        --bg: #10141c;
+        --panel: #171d29;
+        --line: #2b3447;
+        --ink: #e8ecf4;
+        --ink-dim: #a3adc2;
+        --leader: #6a9bff;
+        --follower: #f08a4b;
+        --accent: #f2c14e;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, sans-serif; overflow: hidden; }
+      canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+      .hud { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; }
+      .hud > * { pointer-events: auto; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; }
+      .group { display: flex; gap: 2px; background: var(--line); padding: 2px; }
+      button { font: inherit; color: var(--ink-dim); background: var(--panel); border: 0; padding: 7px 12px; min-height: 36px; cursor: pointer; }
+      button[aria-pressed='true'] { color: var(--bg); background: var(--accent); font-weight: 700; }
+      button:hover:not([aria-pressed='true']) { color: var(--ink); }
+      button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .panel { background: color-mix(in srgb, var(--panel) 88%, transparent); padding: 8px 10px; border: 1px solid var(--line); }
+      .gauges { display: flex; gap: 14px; align-items: flex-end; }
+      .gauge { display: grid; justify-items: center; gap: 4px; font-size: 12px; color: var(--ink-dim); }
+      .bar { width: 14px; height: 70px; background: var(--line); position: relative; }
+      .bar > i { position: absolute; left: 0; right: 0; bottom: 0; height: 0%; }
+      #g-leader i { background: var(--leader); }
+      #g-follower i { background: var(--follower); }
+      .readout { font: 12px/1.5 ui-monospace, Menlo, monospace; color: var(--ink-dim); }
+      .readout b { color: var(--ink); font-weight: 600; }
+      .hint { max-width: 36ch; color: var(--ink-dim); font-size: 12px; }
+      .key { color: var(--leader); } .fkey { color: var(--follower); }
+      #status { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; gap: 8px; background: var(--bg); z-index: 2; padding: 24px; }
+      #status[hidden] { display: none; }
+      #status p { margin: 0; color: var(--ink-dim); }
+      #status strong { font-size: 16px; }
+      .spin { width: 28px; height: 28px; margin: 0 auto; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+      #status.error .spin { display: none; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+      @media (max-width: 520px) { .hint { display: none; } .readout { font-size: 11px; } }
+    </style>
+  </head>
+  <body data-state="loading">
+    <canvas id="view" role="img" aria-label="Simulation of an assistive mortar and pestle. A blue dummy pestle on the left is moved by the user. An orange robot arm grinds in the other mortar."></canvas>
+    <div class="hud">
+      <div class="row">
+        <div class="group" role="group" aria-label="Mode">
+          <button type="button" data-mode="mirror" aria-pressed="true">Mirror</button>
+          <button type="button" data-mode="interpret" aria-pressed="false">Interpret</button>
+        </div>
+        <div class="group" role="group" aria-label="Hand">
+          <button type="button" data-hand="auto" aria-pressed="true">Demo hand</button>
+          <button type="button" data-hand="mine" aria-pressed="false">My hand</button>
+        </div>
+      </div>
+      <div class="row" style="align-items: flex-end">
+        <div class="panel">
+          <div class="readout" id="readout" aria-hidden="true">starting…</div>
+          <p class="hint" id="hint">Move over the <span class="key">blue</span> mortar. Hold to press. Arrow keys or +/− set the push.</p>
+        </div>
+        <div class="panel gauges">
+          <div class="group" role="group" aria-label="Push force">
+            <button type="button" id="force-down" aria-label="Push softer">−</button>
+            <button type="button" id="force-up" aria-label="Push harder">+</button>
+          </div>
+          <div class="gauge" id="g-leader"><div class="bar"><i></i></div><span>Leader</span></div>
+          <div class="gauge" id="g-follower"><div class="bar"><i></i></div><span>Follower</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="status" role="status" aria-live="polite">
+      <div class="spin" aria-hidden="true"></div>
+      <strong id="status-title">Starting the simulation</strong>
+      <p id="status-detail">Loading the physics engine…</p>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
