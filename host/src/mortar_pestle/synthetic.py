@@ -24,6 +24,8 @@ class StrokeSpec:
     noise_mm: float = 0.0
     noise_n: float = 0.0
     seed: int = 0
+    axis_deg: float = 0.0  # linear strokes: direction of the stroke axis in the floor plane
+    points_mm: tuple[tuple[float, float], ...] = ((0.0, 0.0),)  # pounding: hit these in turn
     sample_hz: float = 100.0
 
 
@@ -65,10 +67,17 @@ def _ideal(spec: StrokeSpec, t_s: float) -> tuple[float, float, float]:
             spec.radius_mm * math.sin(angle_rad),
             spec.pressure_n,
         )
+    if spec.pattern is Pattern.LINEAR:
+        # Back and forth through the centre, radius_mm to each side.
+        along_mm = spec.radius_mm * math.sin(2 * math.pi * spec.rate_hz * t_s)
+        axis_rad = math.radians(spec.axis_deg)
+        return along_mm * math.cos(axis_rad), along_mm * math.sin(axis_rad), spec.pressure_n
     if spec.pattern is Pattern.POUNDING:
-        cycle = (spec.rate_hz * t_s) % 1.0
+        hit, cycle = divmod(spec.rate_hz * t_s, 1.0)
+        x_mm, y_mm = spec.points_mm[int(hit) % len(spec.points_mm)]
         if cycle < POUND_DOWN_FRACTION:
             # Each hit is a half-sine pressure pulse that peaks at pressure_n.
-            return 0.0, 0.0, spec.pressure_n * math.sin(math.pi * cycle / POUND_DOWN_FRACTION)
-        return 0.0, 0.0, 0.0
+            pressure_n = spec.pressure_n * math.sin(math.pi * cycle / POUND_DOWN_FRACTION)
+            return x_mm, y_mm, pressure_n
+        return x_mm, y_mm, 0.0
     return 0.0, 0.0, 0.0

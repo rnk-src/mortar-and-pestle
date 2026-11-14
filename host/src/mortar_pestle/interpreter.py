@@ -44,6 +44,28 @@ class InterpretConfig:
     pound_lift_mm: float = 10.0
     pound_down_fraction: float = 0.5
     default_dt_s: float = 0.01
+    max_dt_s: float = 0.05  # cap the phase step after a gap in the Leader Samples
+
+
+class IntentTracker:
+    """Keeps the stroke window and re-estimates the Grind Intent at 10 Hz."""
+
+    def __init__(self, config: InterpretConfig) -> None:
+        self._config = config
+        self._window: deque[LeaderSample] = deque()
+        self._samples_seen = 0
+        self._intent = IDLE_INTENT
+
+    def update(self, sample: LeaderSample) -> GrindIntent:
+        config = self._config
+        self._window.append(sample)
+        oldest_us = sample.timestamp_us - round(config.window_s * 1_000_000)
+        while self._window[0].timestamp_us < oldest_us:
+            self._window.popleft()
+        self._samples_seen += 1
+        if self._samples_seen % config.samples_per_intent == 0:
+            self._intent = estimate_intent(list(self._window), config)
+        return self._intent
 
 
 class InterpretMode:
@@ -51,8 +73,7 @@ class InterpretMode:
 
     def __init__(self, config: InterpretConfig | None = None) -> None:
         self._config = config or InterpretConfig()
-        self._window: deque[LeaderSample] = deque()
-        self._samples_seen = 0
+        self._tracker = IntentTracker(self._config)
         self._intent = IDLE_INTENT
         self._phase_cycles = 0.0  # stroke phase, in cycles
         self._last_us: int | None = None
@@ -63,19 +84,10 @@ class InterpretMode:
         dt_s = (
             config.default_dt_s
             if self._last_us is None
-            else (sample.timestamp_us - self._last_us) / 1_000_000
+            else min((sample.timestamp_us - self._last_us) / 1_000_000, config.max_dt_s)
         )
         self._last_us = sample.timestamp_us
-
-        self._window.append(sample)
-        oldest_us = sample.timestamp_us - round(config.window_s * 1_000_000)
-        while self._window[0].timestamp_us < oldest_us:
-            self._window.popleft()
-
-        self._samples_seen += 1
-        if self._samples_seen % config.samples_per_intent == 0:
-            self._intent = estimate_intent(list(self._window), config)
-
+        self._intent = self._tracker.update(sample)
         self._command = self._next_command(dt_s)
         return self._intent, self._command
 
