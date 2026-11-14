@@ -44,7 +44,16 @@ Each seam has one interface and at least two adapters.
 |---|---|
 | Leader source | replay, synthetic, simulated (PyBullet); later serial |
 | Follower | PyBullet; later MuJoCo, Gazebo, physical SO-101 |
-| Mode | Interpret; later Mirror |
+| Mode | Mirror, Interpret |
+
+## Modes
+- **Mirror**: the Follower Command is the Leader's tip position and pressure, low-pass filtered
+  at 5 Hz to remove tremor (4-12 Hz). Any motion works. The delay is about 70 ms.
+  A Leader Sample has a position only during contact. When contact starts at a new point,
+  the Follower travels there lifted and presses after it arrives.
+- **Interpret**: the Follower estimates a Grind Intent over a 2 s window and executes an ideal
+  stroke. It knows circular strokes and pounding at one point. Other motion gives idle.
+- Both Modes report the estimated Grind Intent for display and recording.
 
 ## Simulation
 - The simulated Leader and the simulated Follower share one PyBullet world.
@@ -83,6 +92,6 @@ After about 100 ms without a valid Leader Sample, the Follower releases pressure
 5. Leader hardware: firmware, calibration, serial adapter.
 6. Demo: real Leader drives the simulated SO-101.
 7. MuJoCo adapter.
-8. Mirror Mode.
+8. Mirror Mode (done early, with Milestone 4).
 9. ROS2 bridge and Gazebo.
 10. Physical SO-101 adapter.
