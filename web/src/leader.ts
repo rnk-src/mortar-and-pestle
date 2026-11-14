@@ -2,10 +2,10 @@
 // A hand moves a light dummy pestle in a sensed mortar. The Leader Sample comes from the
 // pestle's contact with the mortar, as a load-cell plate would measure it.
 //
-// PyBullet holds the pestle with a force-capped constraint. Here a per-substep hook does the
-// same job: a critically damped PD on x and y, a tilt PD to keep it upright, and a capped
-// vertical force. While pressing, the capped force pushes straight down, which is what a
-// saturated constraint does. The pestle's own weight adds to the press.
+// PyBullet holds the pestle with a force-capped constraint. Here the pestle has three slide
+// joints, so it stays upright, and a per-substep hook does the rest: a critically damped PD
+// on x and y, and a capped vertical force. While pressing, the capped force pushes straight
+// down, which is what a saturated constraint does. The pestle's own weight adds to the press.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { GRAVITY, LEADER, MORTAR_FLOOR_M, World } from './world';
@@ -25,9 +25,6 @@ const OMEGA = 2 * Math.PI * 15;
 const MASS = LEADER.massKg;
 const KP = MASS * OMEGA * OMEGA;
 const KD = 2 * MASS * OMEGA;
-const TILT_INERTIA = MASS * (PESTLE_LENGTH_M ** 2 / 12 + LEADER.radiusM ** 2 / 4);
-const KP_TILT = TILT_INERTIA * OMEGA * OMEGA;
-const KD_TILT = 2 * TILT_INERTIA * OMEGA;
 
 export interface HandTarget {
   x_mm: number;
@@ -55,8 +52,7 @@ export class MujocoLeader {
   private readonly world: World;
   private readonly hand: Hand;
   private readonly nowUs: () => number;
-  private readonly bodyId: number;
-  private readonly free: any;
+  private readonly slides: any[];
   private target: [number, number, number] = [0, 0, 0];
   private down = false;
   private capN = HOLD_FORCE_N;
@@ -65,8 +61,7 @@ export class MujocoLeader {
     this.world = world;
     this.hand = hand;
     this.nowUs = nowUs;
-    this.bodyId = world.model.body('leader_pestle').id;
-    this.free = world.data.jnt('leader_pestle_free');
+    this.slides = ['leader_x', 'leader_y', 'leader_z'].map((n) => world.data.jnt(n));
     this.target = this.centreFor(0, 0, HOVER_MM);
     world.hooks.push(this.hold);
   }
@@ -80,16 +75,8 @@ export class MujocoLeader {
   }
 
   private hold = (): void => {
-    const { data } = this.world;
-    const pos = data.body('leader_pestle').xpos as ArrayLike<number>;
-    const q = data.body('leader_pestle').xquat as ArrayLike<number>; // w x y z
-    const m = data.body('leader_pestle').xmat as ArrayLike<number>;
-    const v = this.free.qvel as ArrayLike<number>; // linear: world frame; angular: body frame
-    const w = [
-      m[0] * v[3] + m[1] * v[4] + m[2] * v[5],
-      m[3] * v[3] + m[4] * v[4] + m[5] * v[5],
-      m[6] * v[3] + m[7] * v[4] + m[8] * v[5],
-    ];
+    const pos = this.world.data.body('leader_pestle').xpos as ArrayLike<number>;
+    const v = this.slides.map((j) => j.qvel[0] as number);
     const weight = MASS * GRAVITY;
 
     let fx = KP * (this.target[0] - pos[0]) - KD * v[0];
@@ -111,19 +98,9 @@ export class MujocoLeader {
       fx *= HOLD_FORCE_N / lateral;
       fy *= HOLD_FORCE_N / lateral;
     }
-
-    // Small-angle tilt error: 2 * sign(w) * (x, y) of the quaternion, about world x and y.
-    const s = q[0] < 0 ? -1 : 1;
-    const tx = -KP_TILT * 2 * s * q[1] - KD_TILT * w[0];
-    const ty = -KP_TILT * 2 * s * q[2] - KD_TILT * w[1];
-
-    const b = 6 * this.bodyId;
-    data.xfrc_applied[b] = fx;
-    data.xfrc_applied[b + 1] = fy;
-    data.xfrc_applied[b + 2] = fz;
-    data.xfrc_applied[b + 3] = tx;
-    data.xfrc_applied[b + 4] = ty;
-    data.xfrc_applied[b + 5] = 0;
+    this.slides[0].qfrc_applied[0] = fx;
+    this.slides[1].qfrc_applied[0] = fy;
+    this.slides[2].qfrc_applied[0] = fz;
   };
 
   /** Apply the hand's current target, then return what the Leader sensors measure. */
@@ -137,10 +114,9 @@ export class MujocoLeader {
     this.capN = pressCapN(t.force_n, MASS * GRAVITY);
 
     const c = this.world.contact(LEADER);
-    const q = this.world.data.body('leader_pestle').xquat as ArrayLike<number>;
     return {
       timestamp_us: this.nowUs(),
-      quat_wxyz: [q[0], q[1], q[2], q[3]],
+      quat_wxyz: [1, 0, 0, 0], // held upright
       pressure_n: c.forceN,
       x_mm: c.xMm,
       y_mm: c.yMm,

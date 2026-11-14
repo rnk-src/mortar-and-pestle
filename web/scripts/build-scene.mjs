@@ -25,7 +25,10 @@ const scene = `<mujoco model="mortar_pestle">
     ${mortar('follower', stations.follower)}
     ${mortar('leader', stations.leader)}
     <body name="leader_pestle" pos="${lx} ${ly} ${FLOOR + 0.015 + 0.05}">
-      <freejoint name="leader_pestle_free"/>
+      <!-- Three slides, no rotation: the hand holds the pestle upright, like the PyBullet fixed constraint. -->
+      <joint name="leader_x" type="slide" axis="1 0 0"/>
+      <joint name="leader_y" type="slide" axis="0 1 0"/>
+      <joint name="leader_z" type="slide" axis="0 0 1"/>
       <geom name="leader_pestle_geom" type="capsule" fromto="0 0 -0.042 0 0 0.042" size="0.008" mass="0.03" rgba="0.2 0.5 0.9 1" friction="0.2 0.005 0.0001" solref="0.005 1" solimp="0.95 0.99 0.001" contype="1" conaffinity="1"/>
     </body>
   </worldbody>
