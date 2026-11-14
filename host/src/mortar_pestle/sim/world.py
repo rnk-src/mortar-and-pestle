@@ -10,6 +10,7 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pybullet as p
 import pybullet_data
@@ -24,6 +25,28 @@ CONTACT_THRESHOLD_N = 0.2
 PRESS_DEPTH_M = 0.003  # how far below the floor a pressing hold aims
 HOLD_FORCE_N = 50.0  # hold force while the pestle is not pressing
 MIN_PRESS_FORCE_N = 0.3
+
+
+QUERY_ATTEMPTS = 5
+
+
+def query(call: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+    """Run a PyBullet query. Retry it if it fails.
+
+    In GUI mode a query now and then raises pybullet.error or returns None, although
+    the client is still connected. The next attempt normally succeeds.
+    Return None if no attempt answers. Raise if the last attempt raises.
+    """
+    for attempt in range(QUERY_ATTEMPTS):
+        try:
+            result = call(*args, **kwargs)
+        except p.error:
+            if attempt == QUERY_ATTEMPTS - 1:
+                raise
+            continue
+        if result is not None:
+            return result
+    return None
 
 
 def assets_dir() -> Path:
@@ -125,8 +148,8 @@ class Station:
 
     def tip_mm(self) -> Vec3:
         """Return the pestle tip (its lowest point) in the mortar frame."""
-        position, orientation = p.getBasePositionAndOrientation(
-            self.pestle_id, physicsClientId=self._client
+        position, orientation = query(
+            p.getBasePositionAndOrientation, self.pestle_id, physicsClientId=self._client
         )
         matrix = p.getMatrixFromQuaternion(orientation)
         axis = (matrix[2], matrix[5], matrix[8])  # pestle long axis in the world
@@ -138,8 +161,8 @@ class Station:
         )
 
     def pestle_quat_wxyz(self) -> tuple[float, float, float, float]:
-        _, (x, y, z, w) = p.getBasePositionAndOrientation(
-            self.pestle_id, physicsClientId=self._client
+        _, (x, y, z, w) = query(
+            p.getBasePositionAndOrientation, self.pestle_id, physicsClientId=self._client
         )
         return (w, x, y, z)
 
@@ -148,10 +171,12 @@ class Station:
 
         This is what a load-cell plate under the mortar measures.
         """
-        # PyBullet returns None instead of a list when the GUI is too busy to answer in time.
         points = (
-            p.getContactPoints(
-                bodyA=self.pestle_id, bodyB=self.mortar_id, physicsClientId=self._client
+            query(
+                p.getContactPoints,
+                bodyA=self.pestle_id,
+                bodyB=self.mortar_id,
+                physicsClientId=self._client,
             )
             or ()
         )

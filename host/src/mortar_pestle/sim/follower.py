@@ -19,6 +19,7 @@ from mortar_pestle.sim.world import (
     SimWorld,
     Station,
     assets_dir,
+    query,
 )
 from mortar_pestle.types import FollowerCommand, FollowerState
 
@@ -98,7 +99,8 @@ class PyBulletFollower:
 
     def _drive_slide(self) -> None:
         """Apply this substep's force along the pestle axis, to the pestle and to the gripper."""
-        link = p.getLinkState(
+        link = query(
+            p.getLinkState,
             self._robot,
             TOOL_LINK,
             computeLinkVelocity=1,
@@ -112,8 +114,10 @@ class PyBulletFollower:
             for i in range(3)
         ]
         pestle_id = self._station.pestle_id
-        position, _ = p.getBasePositionAndOrientation(pestle_id, physicsClientId=self._client)
-        velocity, _ = p.getBaseVelocity(pestle_id, physicsClientId=self._client)
+        position, _ = query(
+            p.getBasePositionAndOrientation, pestle_id, physicsClientId=self._client
+        )
+        velocity, _ = query(p.getBaseVelocity, pestle_id, physicsClientId=self._client)
         # Slide of the pestle from its mount, and its rate, both positive towards the tip.
         slide_m = sum((position[i] - mount[i]) * axis[i] for i in range(3))
         rate_m_s = sum((velocity[i] - link[6][i]) * axis[i] for i in range(3))
