@@ -243,7 +243,9 @@ def _loop(
     except KeyboardInterrupt:
         pass
     except p.error:
-        pass  # the window was closed
+        # Closing the window disconnects the client. Any other PyBullet error is a real fault.
+        if p.isConnected(world.client):
+            raise
     finally:
         if display is not None:
             print()
