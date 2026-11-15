@@ -1,6 +1,7 @@
 // Browser entry. Loads MuJoCo and Pyodide only when this page opens, then runs the sim.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Session, TICK_US, type Mode, type TickView } from './session';
+import { formatNewtons } from './format';
 import { View } from './render';
 import { LEADER, World, type Files } from './world';
 import { spacePress } from './keys';
@@ -103,6 +104,7 @@ function start(session: Session, view: View): void {
   const setForce = (n: number) => {
     force = Math.min(MAX_FORCE_N, Math.max(MIN_FORCE_N, n));
     hand.pointer.force_n = force;
+    $('#force-val').textContent = formatNewtons(force, 0);
   };
   hand.pointer.force_n = force;
 
@@ -181,6 +183,8 @@ function start(session: Session, view: View): void {
       `<br>Leader <b class="key">${latest.leader_force_n.toFixed(1)} N</b> · Follower <b class="fkey">${latest.state.contact_force_n.toFixed(1)} N</b>`;
     gauge('#g-leader', latest.leader_force_n);
     gauge('#g-follower', latest.state.contact_force_n);
+    $('#g-leader .val').textContent = formatNewtons(latest.leader_force_n);
+    $('#g-follower .val').textContent = formatNewtons(latest.state.contact_force_n);
   };
 
   const frame = (now: number) => {
