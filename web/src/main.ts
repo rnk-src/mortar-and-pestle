@@ -3,8 +3,11 @@
 import { Session, TICK_US, type Mode, type TickView } from './session';
 import { View } from './render';
 import { LEADER, World, type Files } from './world';
+import { spacePress } from './keys';
 
-const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.29.0/full/';
+declare const __PYODIDE_VERSION__: string;
+
+const PYODIDE_URL = `https://cdn.jsdelivr.net/pyodide/v${__PYODIDE_VERSION__}/full/`;
 const MIN_FORCE_N = 1;
 const MAX_FORCE_N = 15;
 const MAX_TICKS_PER_FRAME = 8;
@@ -75,7 +78,7 @@ function start(session: Session, view: View): void {
   let keyDown = false;
   let pointerDown = false;
   let running = true;
-  let last = view.renderer.domElement ? performance.now() : 0;
+  let last = performance.now();
   let acc = 0;
   let latest: TickView | null = null;
   let hudAt = 0;
@@ -138,7 +141,7 @@ function start(session: Session, view: View): void {
   window.addEventListener('keydown', (e) => {
     if (e.key === ' ' && !(e.target instanceof HTMLButtonElement)) {
       e.preventDefault();
-      keyDown = !keyDown;
+      keyDown = spacePress(keyDown, e);
       hand.pointer.down = keyDown || pointerDown;
       if (hand.auto) setHand(false);
     } else if (e.key === 'ArrowUp') {
@@ -187,7 +190,6 @@ function start(session: Session, view: View): void {
     last = now;
     acc += dt;
     let n = 0;
-    const t0 = performance.now();
     while (acc >= TICK_MS && n < MAX_TICKS_PER_FRAME) {
       latest = session.tick();
       acc -= TICK_MS;
@@ -198,7 +200,6 @@ function start(session: Session, view: View): void {
       simMs += n * TICK_MS;
       wallMs += dt;
     }
-    void t0;
     if (now - hudAt > 120) {
       hudAt = now;
       if (wallMs > 0) speed = simMs / wallMs;
@@ -214,7 +215,7 @@ function start(session: Session, view: View): void {
   setState('running');
   if (wantPaused) pause(true);
   (window as any).__sim = { session, view, get latest() { return latest; }, LEADER };
-  // Reduced motion: start paused with the poster-like first frame; the user can press a key.
+  // Reduced motion: the visitor started the demo, so it runs. Say so in the hint.
   if (reduced) $('#hint').textContent += ' Animation is on because you opened the demo.';
 }
 
