@@ -42,8 +42,8 @@ Each seam has one interface and at least two adapters.
 
 | Seam | Adapters |
 |---|---|
-| Leader source | replay, synthetic, simulated (PyBullet); later serial |
-| Follower | PyBullet; later MuJoCo, Gazebo, physical SO-101 |
+| Leader source | replay, synthetic, simulated (PyBullet), simulated (MuJoCo, browser); later serial |
+| Follower | PyBullet, MuJoCo (browser); later Gazebo, physical SO-101 |
 | Mode | Mirror, Interpret |
 
 ## Modes
@@ -66,6 +66,17 @@ Each seam has one interface and at least two adapters.
 - The simulated Leader reads force and centre of pressure from contact, as a load-cell plate does.
 - The Follower arm uses joint-space position control with capped torque.
 - A damped least-squares solver computes the joint targets. It does not use PyBullet's IK.
+
+## Browser demo
+`web/` runs the same pipeline in a web page. It needs no server.
+- Pyodide runs the unchanged `mortar_pestle` package: Mode, safety governor and pipeline.
+- `web/py/browser.py` wraps two JS objects as the Leader source and Follower ports.
+- MuJoCo (WASM) is the physics. `web/src/leader.ts` and `web/src/follower.ts` port the PyBullet adapters.
+- Three.js draws the MuJoCo geoms. Pointer, touch and keys move the Leader pestle.
+- The Leader pestle has three slide joints, so it stays upright, like the PyBullet fixed constraint.
+- The Follower pestle hangs on one slide joint along the tool axis. The adapter applies the press force there.
+- Differences from PyBullet: elliptic friction cones, and a contact time constant of 20 ms.
+  A shorter time constant made the 0.4 kg pestle chatter on the floor.
 
 ## Protocol
 - Payload: nanopb messages.

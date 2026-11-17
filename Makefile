@@ -4,9 +4,9 @@
 HOST := uv run --locked --directory host
 CPP_FILES := $(shell find firmware -name .pio -prune -o \( -name '*.h' -o -name '*.hpp' -o -name '*.c' -o -name '*.cc' -o -name '*.cpp' \) -print)
 
-.PHONY: check format py-format-check py-lint py-types py-test cpp-format-check cpp-test cpp-build
+.PHONY: check format py-format-check py-lint py-types py-test cpp-format-check cpp-test cpp-build web-check
 
-check: py-format-check py-lint py-types py-test cpp-format-check cpp-test cpp-build
+check: py-format-check py-lint py-types py-test cpp-format-check cpp-test cpp-build web-check
 	@echo "check: all passed"
 
 py-format-check:
@@ -31,6 +31,10 @@ cpp-test:
 # Compile only. This target does not upload.
 cpp-build:
 	pio run -d firmware -e esp32dev
+
+# Browser demo: type check, tests (including Pyodide and MuJoCo headless) and a production build.
+web-check:
+	cd web && npm ci --prefer-offline --no-audit --no-fund && npm run check
 
 format:
 	$(HOST) ruff format .
