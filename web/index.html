@@ -49,7 +49,9 @@
       @keyframes spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
       .solo { border: 2px solid var(--line); }
+      #fullscreen { display: inline-grid; place-items: center; }
       #fullscreen[hidden] { display: none; }
+      .ico { width: 16px; height: 16px; fill: currentColor; }
       @media (max-width: 520px) { .hint { display: none; } .readout { font-size: 11px; } }
       /* A small frame, e.g. a phone: keep the controls, drop the text. */
       @media (max-height: 380px) {
@@ -72,7 +74,7 @@
           <button type="button" data-mode="mirror" aria-pressed="true">Mirror</button>
           <button type="button" data-mode="interpret" aria-pressed="false">Interpret</button>
         </div>
-        <button type="button" id="fullscreen" class="solo" hidden aria-label="Toggle fullscreen">⤢</button>
+        <button type="button" id="fullscreen" class="solo" hidden aria-label="Toggle fullscreen"><svg class="ico" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="M5 0h3v3H7V1H5zM0 5h1v2h2v1H0zM6 1h1v1H6zM5 2h1v1H5zM4 3h1v1H4zM3 4h1v1H3zM2 5h1v1H2zM1 6h1v1H1z"/></svg></button>
         <div class="group" role="group" aria-label="Hand">
           <button type="button" data-hand="auto" aria-pressed="true">Demo hand</button>
           <button type="button" data-hand="mine" aria-pressed="false">My hand</button>
